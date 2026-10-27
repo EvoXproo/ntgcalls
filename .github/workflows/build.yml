@@ -52,7 +52,7 @@ on:
       publish:
         description: 'Publish the library'
         required: false
-        default: true
+        default: false
         type: boolean
 jobs:
   setup:
@@ -72,7 +72,7 @@ jobs:
             desktop_list+=",{\"os\":\"ubuntu-latest\",\"blacksmith_os\":\"blacksmith-4vcpu-ubuntu-2404\",\"shared_name\":\"linux-x86_64\",\"cibw_os_build\":\"manylinux_\",\"container_image\":\"ghcr.io/pytgcalls/ntgcalls/manylinux-x86_64:latest\"}"
           fi
           if [[ "${{ github.event.inputs.linux-arm64-build }}" == "true" ]]; then
-            desktop_list+=",{\"os\":\"arm64-server\",\"blacksmith_os\":\"blacksmith-4vcpu-ubuntu-2404-arm\",\"shared_name\":\"linux-arm64\",\"cibw_os_build\":\"manylinux_\",\"container_image\":\"ghcr.io/pytgcalls/ntgcalls/manylinux-arm64:latest\"}"
+            desktop_list+=",{\"os\":\"ubuntu-24.04-arm\",\"blacksmith_os\":\"blacksmith-4vcpu-ubuntu-2404-arm\",\"shared_name\":\"linux-arm64\",\"cibw_os_build\":\"manylinux_\",\"container_image\":\"ghcr.io/pytgcalls/ntgcalls/manylinux-arm64:latest\"}"
           fi
           if [[ "${{ github.event.inputs.macos-build }}" == "true" ]]; then
             desktop_list+=",{\"os\":\"macos-15\",\"blacksmith_os\":\"blacksmith-6vcpu-macos-15\",\"shared_name\":\"macos-arm64\",\"cibw_os_build\":\"macosx_\"}"
@@ -178,7 +178,7 @@ jobs:
         if: github.event.inputs.build-wheels == 'true'
         env:
           CIBW_PROJECT_REQUIRES_PYTHON: ">=3.10"
-          CIBW_BUILD: cp3*-${{ matrix.cibw_os_build }}*
+          CIBW_BUILD: cp310-${{ matrix.cibw_os_build }}* cp311-${{ matrix.cibw_os_build }}*
           CIBW_TEST_COMMAND: python -m unittest discover -s {package}/tests
           CIBW_CONTAINER_ENGINE: none
           CIBW_ENVIRONMENT: "PYPI_TAGS=1"
