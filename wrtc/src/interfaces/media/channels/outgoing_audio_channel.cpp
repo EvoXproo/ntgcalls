@@ -6,6 +6,8 @@
 
 #include <wrtc/interfaces/native_connection.hpp>
 
+#include <cstdlib>
+
 namespace wrtc {
     OutgoingAudioChannel::OutgoingAudioChannel(
         webrtc::Call* call,
@@ -39,6 +41,25 @@ namespace wrtc {
                 webrtc::Codec codec = webrtc::CreateAudioCodec(static_cast<int>(id), name, static_cast<int>(clockrate), channels);
                 codec.SetParam(webrtc::kCodecParamUseInbandFec, 1);
                 codec.SetParam(webrtc::kCodecParamPTime, 60);
+                // [opus128 patch] Without these WebRTC picks its defaults for
+                // the outgoing encoder: 1 channel, 32 kbps, VoIP application.
+                // stereo + sprop-stereo + maxaveragebitrate make it 2 channels,
+                // audio application at the given bitrate (see ntgcalls #83).
+                // NTG_OPUS_BITRATE=<bps> picks the bitrate (default 128000);
+                // NTG_OPUS_BITRATE=0 keeps the stock behaviour (no reinstall).
+                {
+                    int hqBitrate = 128000;
+                    if (const char* env = std::getenv("NTG_OPUS_BITRATE")) {
+                        hqBitrate = std::atoi(env);
+                    }
+                    if (hqBitrate > 0) {
+                        if (hqBitrate < 6000) hqBitrate = 6000;
+                        if (hqBitrate > 510000) hqBitrate = 510000;
+                        codec.SetParam(webrtc::kCodecParamStereo, 1);
+                        codec.SetParam(webrtc::kCodecParamSPropStereo, 1);
+                        codec.SetParam(webrtc::kCodecParamMaxAverageBitrate, hqBitrate);
+                    }
+                }
                 for (const auto &[type, subtype] : feedbackTypes) {
                     codec.AddFeedbackParam(webrtc::FeedbackParam(type, subtype));
                 }
